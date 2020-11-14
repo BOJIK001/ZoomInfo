@@ -1,12 +1,14 @@
 const fetch = require('node-fetch');
 // Get environment suppliers
-const { SUPPLIERS } = JSON.parse(process.env);
+const SUPPLIERS = process.env.SUPPLIERS;
 
-const ATTEMPTS = process.env || 2;
-const SUPPLIER_TIMEOUT = process.env || 300000;
+const ATTEMPTS = process.env.ATTEMPTS || 2;
+const SUPPLIER_TIMEOUT = process.env.SUPPLIER_TIMEOUT || 300000;
+const TIME_TO_PENALTY = process.env.TIME_TO_PENALTY || 60;
+const PENALTY = process.env.PENALTY || 15;
 
 // List of valid suppliers
-const ACTIVE_SUPPLIERS = [];
+const activeSuppliers = [];
 
 if (!SUPPLIERS) {
   console.error('No suppliers found in the enviorment.');
@@ -17,13 +19,13 @@ if (!SUPPLIERS) {
  * @param location : User input of a target location
  */
 async function serve(location) {
-    const best = ACTIVE_SUPPLIERS.map(supplierData =>  {
-        return { score : score(supplierData, location), 
-                 supplierData };
-    })
-    .reduce((best, supplier) => {
-        return (best.score || Number.MAX_SAFE_INTEGER) > supplier.score ? supplier : best ;
-    })
+    const best = activeSuppliers.map(supplierData =>
+                                        {
+                                            return { score : score(supplierData, location), 
+                                                     supplierData };
+                                        })
+    .reduce((best, supplier) => 
+        (best.score || Number.MAX_SAFE_INTEGER) > supplier.score ? supplier : best )
     .supplierData.supplier;
 
     return best;
@@ -31,17 +33,18 @@ async function serve(location) {
 
 /**
  * Returns the score of a certain supplier for the target location
- * @param supplierData : A valid object from ACTIVE_SUPPLIERS
+ * @param supplierData : A valid object from activeSuppliers
  * @param location : Target location
  */
 function score(supplierData, location)
 {
     const supplier = supplierData.supplier;
     const distance = getDistance(supplier.location, location);
+    
     let score = distance / supplier.speed;
 
-    if(supplierData.responseTime > 60000)
-        score += parseInt(supplierData.responseTime / 1000 - 60) * 15;
+    if(supplierData.responseTime > TIME_TO_PENALTY * 1000)
+        score += parseInt(supplierData.responseTime / 1000 - TIME_TO_PENALTY) * PENALTY;
     
     return score;
 }
@@ -83,12 +86,12 @@ async function statusCheck(supplierUrl)
  */
 async function select() 
 {
-    for (const supplier of SUPPLIERS) {
+    for (const supplier of JSON.parse(SUPPLIERS)) {
         try 
         {
           const responseTime = await statusCheck(supplier.supplierConnectUrl, 2);  
 
-          ACTIVE_SUPPLIERS.push({
+          activeSuppliers.push({
             supplier,
             responseTime
           });
