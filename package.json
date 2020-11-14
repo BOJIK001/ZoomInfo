@@ -1,0 +1,22 @@
+{
+  "name": "zoominfo",
+  "version": "1.0.0",
+  "description": "Home assignment",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BOJIK001/ZoomInfo.git"
+  },
+  "author": "Mark Volkov",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/BOJIK001/ZoomInfo/issues"
+  },
+  "homepage": "https://github.com/BOJIK001/ZoomInfo#readme",
+  "dependencies": {
+    "node-fetch": "^2.6.1"
+  }
+}
