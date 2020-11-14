@@ -3,7 +3,7 @@ const fetch = require('node-fetch');
 const { SUPPLIERS } = JSON.parse(process.env);
 
 const ATTEMPTS = process.env || 2;
-const SUPPLIER_TIMEOUT = process.env || 5000;
+const SUPPLIER_TIMEOUT = process.env || 300000;
 
 // List of valid suppliers
 const ACTIVE_SUPPLIERS = [];
@@ -17,31 +17,31 @@ if (!SUPPLIERS) {
  * @param location : User input of a target location
  */
 async function serve(location) {
-    let best = ACTIVE_SUPPLIERS.map(supplier_data =>  {
-        return { score : score(supplier_data, location), 
-                 supplier_data };
+    const best = ACTIVE_SUPPLIERS.map(supplierData =>  {
+        return { score : score(supplierData, location), 
+                 supplierData };
     })
     .reduce((best, supplier) => {
         return (best.score || Number.MAX_SAFE_INTEGER) > supplier.score ? supplier : best ;
     })
-    .supplier_data.supplier;
+    .supplierData.supplier;
 
     return best;
 }
 
 /**
  * Returns the score of a certain supplier for the target location
- * @param supplier_data : A valid object from ACTIVE_SUPPLIERS
+ * @param supplierData : A valid object from ACTIVE_SUPPLIERS
  * @param location : Target location
  */
-function score(supplier_data, location)
+function score(supplierData, location)
 {
-    let supplier = supplier_data.supplier;
-    let distance = get_distance(supplier.location, location);
+    const supplier = supplierData.supplier;
+    const distance = getDistance(supplier.location, location);
     let score = distance / supplier.speed;
 
-    if(supplier_data.responseTime > 60000)
-        score += parseInt(supplier_data.responseTime / 1000 - 60) * 15;
+    if(supplierData.responseTime > 60000)
+        score += parseInt(supplierData.responseTime / 1000 - 60) * 15;
     
     return score;
 }
@@ -49,37 +49,33 @@ function score(supplier_data, location)
 /**
  * Gets the distance between 2 locaions
  */
-function get_distance(loc1, loc2)
+function getDistance(loc1, loc2)
 {
-    let x = loc1.x - loc2.x;
-    let y = loc1.y - loc2.y;
+    const x = loc1.x - loc2.x;
+    const y = loc1.y - loc2.y;
 
     return Math.sqrt(x*x + y*y);
 }
 
 /**
  * Checks which suppliers are available and their availability time
- * @param {sting} supplier_url : supplierConnectUrl of a supplier
+ * @param {sting} supplierUrl : supplierConnectUrl of a supplier
  */
-async function status_check(supplier_url) 
+async function statusCheck(supplierUrl) 
 {
-    //  Try at least 2 times with a 5 seconds timeout
+    //  Try at least 2 times with a 5 minutes timeout
     for (let attempt = 0; attempt < ATTEMPTS; attempt++) {
         
         try {
-
           const requestTime = Date.now();
-
-          await fetch(`http://${supplier_url}`, { timeout: SUPPLIER_TIMEOUT });
-        
+          await fetch(`http://${supplierUrl}`, { timeout: SUPPLIER_TIMEOUT });
           const fetchTime = Date.now();
-
           return (fetchTime - requestTime);
         } 
         catch (err) { }
     }
 
-    throw new Error(`${supplier_url} status check failed.`);
+    throw new Error(`${supplierUrl} status check failed.`);
 }
 
 /**
@@ -90,7 +86,7 @@ async function select()
     for (const supplier of SUPPLIERS) {
         try 
         {
-          const responseTime = await status_check(supplier.supplierConnectUrl, 2);  
+          const responseTime = await statusCheck(supplier.supplierConnectUrl, 2);  
 
           ACTIVE_SUPPLIERS.push({
             supplier,
