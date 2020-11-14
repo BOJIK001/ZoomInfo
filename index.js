@@ -5,7 +5,7 @@ async function main() {
 
   try {
 
-    let best = await serve({x:1, y:70});
+    const best = await serve({x:1, y:70});
     console.log(`Supplier ${best.name} is the best.`);
     
   } catch (err) {
