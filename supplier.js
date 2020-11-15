@@ -10,10 +10,6 @@ const PENALTY = process.env.PENALTY || 15;
 // List of valid suppliers
 const activeSuppliers = [];
 
-if (!SUPPLIERS) {
-  console.error('No suppliers found in the enviorment.');
-}
-
 /**
  * Gets the best supplier for the requested location
  * @param location : User input of a target location
@@ -86,6 +82,9 @@ async function statusCheck(supplierUrl)
  */
 async function select() 
 {
+    if (!SUPPLIERS) 
+        console.error('No suppliers found in the enviorment.');
+    
     for (const supplier of JSON.parse(SUPPLIERS)) {
         try 
         {
